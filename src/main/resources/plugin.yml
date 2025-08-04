@@ -1,0 +1,16 @@
+name: SizeClock
+version: 1.7
+main: com.damir00109.SizeClock.SizeClock
+api-version: 1.21.7
+load: STARTUP
+author: Damir00109
+description: Плагин "Часы размера" с кастомным предметом и GUI.
+commands:
+  sizeclock:
+    description: Выдать предмет "Часы размера" (только для админов)
+    usage: /sizeclock give
+    permission: sizeclock.give
+permissions:
+  sizeclock.give:
+    description: Позволяет выдавать предмет "Часы размера"
+    default: op 

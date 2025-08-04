@@ -1,0 +1,64 @@
+
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'io.papermc.paperweight.userdev' version '2.0.0-beta.17'
+}
+
+group = 'com.damir00109'
+version = '1.7'
+sourceCompatibility = '21'
+targetCompatibility = '21'
+
+repositories {
+    mavenCentral()
+    maven { url = 'https://repo.papermc.io/repository/maven-public/' }
+}
+
+dependencies {
+    compileOnly 'io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT'
+    paperweight.paperDevBundle("1.21.7-R0.1-SNAPSHOT")
+}
+
+jar {
+    archiveClassifier.set('original')
+    manifest {
+        attributes["paperweight-mappings-namespace"] = "mojang"
+    }
+}
+
+shadowJar {
+    archiveClassifier.set('')
+    manifest {
+        attributes["paperweight-mappings-namespace"] = "mojang"
+    }
+}
+
+tasks.register('runServer', JavaExec) {
+    group = 'run'
+    description = 'Runs a Paper server for development.'
+
+    executable = 'C:\\Program Files\\Zulu\\zulu-21\\bin\\java.exe'
+
+    // Use the actual Paper server JAR for execution
+    def paperServerJar = configurations.runtimeClasspath.filter { it.name.startsWith('paper-1.21.7') }.singleFile
+
+    args = [
+        '-jar',
+        paperServerJar.absolutePath,
+        'nogui'
+    ]
+
+    def serverDir = file('run')
+    workingDir = serverDir
+
+    doFirst {
+        serverDir.mkdirs()
+        def eulaFile = new File(serverDir, 'eula.txt')
+        if (!eulaFile.exists()) {
+            eulaFile.write('eula=true')
+        }
+    }
+
+    standardInput = System.in
+} 
