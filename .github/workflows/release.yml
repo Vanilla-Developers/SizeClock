@@ -30,21 +30,16 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build
 
-      - name: Get Project Info
-        id: properties
-        run: |
-          # Более надежный способ получить версию и имя артефакта
-          VERSION=$(./gradlew properties -q | grep "^version:" | awk '{print $2}')
-          ARTIFACT_NAME=$(grep -o "archivesBaseName = '.*'" build.gradle | cut -d"'" -f2)
-          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
-          # Собираем полное имя JAR файла
-          echo "JAR_NAME=${ARTIFACT_NAME:-SizeClock}-${VERSION}.jar" >> $GITHUB_OUTPUT
+      - name: Get project version
+        id: get_version
+        run: echo "VERSION=$(./gradlew properties -q | grep "^version:" | awk '{print $2}')" >> $GITHUB_OUTPUT
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v${{ steps.properties.outputs.VERSION }}"
-          name: "Release v${{ steps.properties.outputs.VERSION }}"
+          tag_name: "v${{ steps.get_version.outputs.VERSION }}"
+          name: "Release v${{ steps.get_version.outputs.VERSION }}"
           generate_release_notes: true # Автоматически создаем описание из коммитов
-          files: "build/libs/${{ steps.properties.outputs.JAR_NAME }}" # Точный путь к файлу
+          # Используем wildcard, чтобы найти единственный jar в папке. Это самый надежный способ.
+          files: "build/libs/*.jar"
           fail_on_unmatched_files: true
