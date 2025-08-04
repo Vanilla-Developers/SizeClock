@@ -29,7 +29,7 @@ jobs:
       - name: Get plugin version
         id: properties
         run: |
-          VERSION=$(grep 'pluginVersion' gradle.properties | cut -d'=' -f2)
+          VERSION=$(grep 'version' build.gradle | cut -d'=' -f2)
           echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Create or Update Release
