@@ -3,13 +3,14 @@ name: Release Plugin
 on:
   push:
     branches:
-      - main # Или master, в зависимости от вашей основной ветки
+      - main # или master
 
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Даем права на запись для создания/обновления релизов
+      contents: write # Права на создание релиза
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -24,20 +25,23 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Build with Gradle
-        run: gradle build
+        run: ./gradlew build
 
-      - name: Get plugin version
+      - name: Get Project Info
         id: properties
         run: |
-          VERSION=$(grep 'version' build.gradle | cut -d'=' -f2)
+          # Более надежный способ получить версию и имя артефакта
+          VERSION=$(./gradlew properties -q | grep "^version:" | awk '{print $2}')
+          ARTIFACT_NAME=$(grep -o "archivesBaseName = '.*'" build.gradle | cut -d"'" -f2)
           echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+          # Собираем полное имя JAR файла
+          echo "JAR_NAME=${ARTIFACT_NAME:-SizeClock}-${VERSION}.jar" >> $GITHUB_OUTPUT
 
-      - name: Create or Update Release
+      - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: "v${{ steps.properties.outputs.VERSION }}"
           name: "Release v${{ steps.properties.outputs.VERSION }}"
-          body: "Automatic release for version ${{ steps.properties.outputs.VERSION }}"
-          # Используем wildcard (маску) для надежного поиска JAR-файла
-          files: "build/libs/*.jar"
+          generate_release_notes: true # Автоматически создаем описание из коммитов
+          files: "build/libs/${{ steps.properties.outputs.JAR_NAME }}" # Точный путь к файлу
           fail_on_unmatched_files: true
